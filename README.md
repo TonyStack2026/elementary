@@ -1,6 +1,5 @@
 ## Community-maintained fork of the original [elementary](https://github.com/elementary-data/elementary) package with extended support for [dbt-maxcompute](https://github.com/aliyun/dbt-maxcompute) (dbt adapter of Alibaba Cloud MaxCompute).
 
-
 <p align="center">
 <img alt="Logo" src="https://raw.githubusercontent.com/elementary-data/elementary/master/static/github_banner.png"/ width="1000">
 </p>
@@ -134,14 +133,13 @@ Thank you :orange_heart: Whether it’s a bug fix, new feature, or additional do
 
 Check out the [contributions guide](https://docs.elementary-data.com/general/contributions) and [open issues](https://github.com/elementary-data/elementary/issues) in the main repo.
 
-
 ## Dependency pinning
 
 `packages.yml` pins **dbt-utils** to tag `1.3.0-mc.1`:
 
 ```yaml
-  - git: "https://github.com/dingxin-tech/dbt-utils.git"
-    revision: 1.3.0-mc.1
+- git: "https://github.com/dingxin-tech/dbt-utils.git"
+  revision: 1.3.0-mc.1
 ```
 
 `package-lock.yml` in this directory records what that resolved to:
@@ -171,13 +169,20 @@ packages:
 Pin tag in your own project, then commit the `package-lock.yml` that `dbt deps` writes there: it holds the full commit sha, so a rebuild years from now installs this same code.
 
 ```bash
-rm -rf dbt_packages package-lock.yml && dbt deps   # writes a lock holding full commit shas
-dbt deps --lock                                    # later runs install exactly what is locked
+rm -rf dbt_packages package-lock.yml && dbt deps   # first install: resolves, installs, writes the lock
+dbt deps                                           # later runs: install exactly what the committed lock records
+dbt deps --lock                                    # regenerate the lock file only - it installs nothing
 ```
+
+`--lock` is not an install command. On dbt-core 1.11 `dbt deps --help` describes it as
+"Generate the package-lock.yml file without install the packages." - it writes
+`package-lock.yml` and stops there. Reproducing an install is plain `dbt deps`: with a
+committed lock and an unchanged `packages.yml`, that is what reads the lock as its source
+of truth, and it is what a rebuild months later runs.
 
 ### Upgrading a dependency
 
-1. Read the current MaxCompute support level first: the *Compatible dbt Packages* table in the
+1. Read the current MaxCompute support level first: the _Compatible dbt Packages_ table in the
    [dbt-maxcompute README](https://github.com/aliyun/dbt-maxcompute).
 2. Change `revision:` (or `version:`) to a tag or a full 40-char commit sha. Never a branch name -
    `.github/workflows/deps-lock-check.yml` fails on that.
